@@ -45,15 +45,48 @@ router.post(
 
 router.post("/refreshToken", authController.postRefreshToken);
 
-router.post("/requestPasswordReset", authController.postRequestPasswordReset);
+router.post(
+  "/requestPasswordReset",
+  [
+    body("email")
+      .isEmail()
+      .withMessage("Please enter a valid email")
+      .normalizeEmail(),
+  ],
+  authController.postRequestPasswordReset
+);
 
-router.post("/passwordReset", authController.postPasswordReset)
+router.put(
+  "/passwordReset",
+  [
+    body("newPassword").trim().isLength({ min: 5 }),
+    body("confirmedNewPassword").trim().isLength({ min: 5 }),
+  ],
+  authController.putPasswordReset
+);
 
-router.post("/requestVerifyEmail", authController.postRequestVerifyEmail)
+router.put(
+  "/changePassword",
+  [
+    body("newPassword").trim().isLength({ min: 5 }),
+    body("confirmedPassword").trim().isLength({ min: 5 }),
+  ],
+  isAuth,
+  authController.putChangePassword
+);
 
-router.post("/verifyEmail", authController.postVerifyEmail)
+router.post(
+  "/requestVerifyEmail",
+  [
+    body("email")
+      .isEmail()
+      .withMessage("Please enter a valid email")
+      .normalizeEmail(),
+  ],
+  authController.postRequestVerifyEmail
+);
 
-router.put("/changePassword", isAuth, authController.putChangePassword);
+router.post("/verifyEmail", authController.postVerifyEmail);
 
 router.post("/logout", isAuth, authController.postLogout);
 

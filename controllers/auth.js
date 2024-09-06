@@ -268,6 +268,15 @@ exports.postRefreshToken = async (req, res, next) => {
 exports.postRequestPasswordReset = async (req, res, next) => {
   const { email } = req.body;
 
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const error = new Error("Validation Failed");
+    errors.statusCode = 422;
+    errors.data = errors.array();
+    return next(error);
+  }
+
   try {
     const user = await User.findOne({ email: email });
     if (!user) {
@@ -313,9 +322,18 @@ exports.postRequestPasswordReset = async (req, res, next) => {
   }
 };
 
-exports.postPasswordReset = async (req, res, next) => {
+exports.putPasswordReset = async (req, res, next) => {
   const passwordResetToken = req.query.token;
-  const { newPassword, confirmedNewPassword } = req.body;
+  const { newPassword, confirmedPassword } = req.body;
+
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const error = new Error("Validation Failed");
+    errors.statusCode = 422;
+    errors.data = errors.array();
+    return next(error);
+  }
 
   try {
     if (!passwordResetToken) {
@@ -323,7 +341,7 @@ exports.postPasswordReset = async (req, res, next) => {
       error.statusCode = 401;
       throw error;
     }
-    if (newPassword !== confirmedNewPassword) {
+    if (newPassword !== confirmedPassword) {
       const error = new Error("Passwords do not match");
       error.statusCode = 422;
       throw error;
@@ -358,12 +376,14 @@ exports.postPasswordReset = async (req, res, next) => {
 
 exports.putChangePassword = async (req, res, next) => {
   const errors = validationResult(req);
+
   if (!errors.isEmpty()) {
     const error = new Error("Validation Failed");
     errors.statusCode = 422;
     errors.data = errors.array();
     return next(error);
   }
+
   const userId = req.userId;
   const oldPassword = req.body.oldPassword;
   const newPassword = req.body.newPassword;
@@ -460,14 +480,17 @@ exports.getUser = async (req, res, next) => {
 
 exports.postDeleteAccount = async (req, res, next) => {
   const errors = validationResult(req);
+
   if (!errors.isEmpty()) {
     const error = new Error("Validation Failed");
     errors.statusCode = 422;
     errors.data = errors.array();
     return next(error);
   }
+
   const userId = req.userId;
   const password = req.body.password;
+
   try {
     if (!password) {
       const error = new Error("Password not provided.");
