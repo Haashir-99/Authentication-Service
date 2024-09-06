@@ -7,7 +7,7 @@ const isAuth = require("../middlewares/is-auth");
 const router = express.Router();
 
 router.post(
-  "/signup",
+  "/register",
   [
     body("email")
       .isEmail()
@@ -43,7 +43,19 @@ router.post(
   authController.postLogin
 );
 
-// router.put("/resetPassword");
+router.post("/refreshToken", authController.postRefreshToken);
+
+router.post("/requestPasswordReset", authController.postRequestPasswordReset);
+
+router.post("/passwordReset", authController.postPasswordReset)
+
+// router.post("/verifyEmail", authcontroller.postVerifyEmail)
+
+router.put("/changePassword", isAuth, authController.putChangePassword);
+
+router.post("/logout", isAuth, authController.postLogout);
+
+router.get("/user", isAuth, authController.getUser);
 
 router.delete(
   "/deleteUser",
