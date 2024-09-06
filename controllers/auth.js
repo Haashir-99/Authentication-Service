@@ -1,24 +1,28 @@
+require("dotenv").config();
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const axios = require("axios");
 
-require("dotenv").config();
-
 const User = require("../models/user");
 
 exports.postSignup = async (req, res, next) => {
+  const verifyEmail = req.query.verifyEmail;
+
   const errors = validationResult(req);
+
   if (!errors.isEmpty()) {
     const error = new Error("Validation Failed");
     errors.statusCode = 422;
     errors.data = errors.array();
     return next(error);
   }
+
   const email = req.body.email;
   const password = req.body.password;
   const confirmedPassword = req.body.confirmedPassword;
+
   try {
     if (!email || !password || !confirmedPassword) {
       const error = new Error("Complete info not provided.");
@@ -40,6 +44,17 @@ exports.postSignup = async (req, res, next) => {
     const user = new User({ email: email, password: hashedPassword });
     await user.save();
 
+    if (verifyEmail === "true") {
+      const resposne = await axios.post(
+        "http://localhost:3000/api/auth/requestVerifyEmail",
+        { email: email }
+      );
+      return res.status(201).json({
+        message: "Created a New User and Requested Verification Email",
+        userId: user._id,
+      });
+    }
+
     res.status(201).json({
       message: "Created a New User",
       userId: user._id,
@@ -49,7 +64,91 @@ exports.postSignup = async (req, res, next) => {
   }
 };
 
+exports.postRequestVerifyEmail = async (req, res, next) => {
+  const email = req.body.email;
+
+  try {
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      const error = new Error("No such user");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const name = email.split("@")[0];
+
+    const emailVerificationToken = jwt.sign(
+      {
+        email: email,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "6h" }
+    );
+
+    const verifyLink = `http://localhost:3000/api/auth/passwordReset?token=${emailVerificationToken}`;
+
+    await axios.post("http://localhost:4000/api/mail/send-transactional", {
+      recipient: {
+        email: email,
+        name: name,
+      },
+      subject: "Verify Your Email",
+      templateId: 4,
+      params: {
+        verifyLink: verifyLink,
+        userName: name,
+        email: email,
+      },
+    });
+
+    res.status(200).json({
+      message: "Password reset email sent",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.postVerifyEmail = async (req, res, next) => {
+  const emailVerificationToken = req.query.token;
+
+  try {
+    if (!emailVerificationToken) {
+      const error = new Error("No token provided");
+      error.statusCode = 401;
+      throw error;
+    }
+
+    let decodedToken;
+
+    decodedToken = jwt.verify(emailVerificationToken, process.env.JWT_SECRET);
+
+    if (!decodedToken) {
+      const error = new Error("Not Authenticated");
+      error.statusCode = 401;
+      throw error;
+    }
+
+    const user = await User.findOne({ email: decodedToken.email });
+    if (!user) {
+      const error = new Error("No such user");
+      error.statusCode = 404;
+      throw error;
+    }
+    user.verified = true;
+    await user.save();
+
+    res.status(201).json({
+      message: "Verified User Successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.postLogin = async (req, res, next) => {
+  const verifyEmail = req.query.verifyEmail;
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const error = new Error("Validation Failed");
@@ -71,7 +170,16 @@ exports.postLogin = async (req, res, next) => {
       error.statusCode = 404;
       throw error;
     }
+    if (verifyEmail === "true") {
+      if (!user.verified) {
+        const error = new Error("Your account is not verfied yet");
+        error.statusCode = 403;
+        throw error;
+      }
+    }
+
     const isEqual = await bcrypt.compare(password, user.password);
+
     if (!isEqual) {
       const error = new Error("Password is Incorrect.");
       error.statusCode = 422;
@@ -95,6 +203,7 @@ exports.postLogin = async (req, res, next) => {
       process.env.JWT_REFRESH_SECRET,
       { expiresIn: "7d" } // Refresh token valid for 7 days
     );
+
     user.refreshToken = refreshToken;
 
     await user.save();
@@ -330,8 +439,6 @@ exports.postLogout = async (req, res, next) => {
     next(err);
   }
 };
-
-// exports.postVerifyEmail = async (req, res, next) => {}
 
 exports.getUser = async (req, res, next) => {
   const userId = req.userId;

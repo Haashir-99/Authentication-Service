@@ -49,7 +49,9 @@ router.post("/requestPasswordReset", authController.postRequestPasswordReset);
 
 router.post("/passwordReset", authController.postPasswordReset)
 
-// router.post("/verifyEmail", authcontroller.postVerifyEmail)
+router.post("/requestVerifyEmail", authController.postRequestVerifyEmail)
+
+router.post("/verifyEmail", authController.postVerifyEmail)
 
 router.put("/changePassword", isAuth, authController.putChangePassword);
 
