@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authentication API</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #1e1e1e;
+      color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      max-width: 700px;
+      background-color: #2a2a2a;
+      padding: 40px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border-radius: 15px;
+      text-align: center;
+    }
+    h1 {
+      font-weight: 500;
+      margin-bottom: 20px;
+      color: #f5f5f5;
+    }
+    p {
+      font-size: 1.1rem;
+      color: #c5c5c5;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    .button-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 18px;
+      background-color: #3a3a3a;
+      color: white;
+      text-decoration: none;
+      font-size: 0.9rem;
+      border-radius: 30px;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      white-space: nowrap;
+      min-width: 120px;
+    }
+    a:hover {
+      background-color: #555;
+    }
+    .button-container img {
+      margin-right: 8px;
+      width: 20px;
+      height: 20px;
+    }
+
+    .social-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 0px;
+    }
+    .social-btn {
+      background-color: #3a3a3a;
+      border-radius: 30px; 
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.3s ease;
+      text-decoration: none;
+      width: auto;
+      height: 40px;
+    }
+    .social-btn img {
+      width: 20px;
+      height: 20px;
+    }
+    .social-btn:hover {
+      background-color: #555;
+    }
+
+    footer {
+      font-size: 0.9rem;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to the Authentication API <br> Microservice</h1>
+    <p>This API provides a set of authentication-related endpoints such as user registration, login, password reset, and more.</p>
+    <p>For detailed documentation and testing instructions, click the links below:</p>
+    
+    <div class="button-container">
+      <!-- Postman button -->
+      <a href="https://documenter.getpostman.com/view/37885642/2sAXjT1pjw" target="_blank">
+        <img src="https://seeklogo.com/images/P/postman-logo-0087CA0D15-seeklogo.com.png" alt="Postman logo"> 
+        View Documentation
+      </a>
+
+      <!-- GitHub button -->
+      <a href="https://github.com/Haashir-99/Authentication-Service" target="_blank">
+        <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub logo">
+        GitHub Repository
+      </a>
+    </div>
+
+    <footer>
+      <p>Created by <a href="https://github.com/Haashir-99">Haashir Azhar</a></p>
+      
+      <!-- Social Media Buttons -->
+      <p>Follow me on:</p>
+      <div class="social-container">
+        <a href="https://x.com/mrbubbles_69" class="social-btn" target="_blank">
+          <img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt="Twitter">
+        </a>
+        <a href="https://www.linkedin.com/in/haashir-azhar-447b41283/" class="social-btn" target="_blank">
+          <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn">
+        </a>
+        <a href="https://www.instagram.com/haashir_codes/" class="social-btn" target="_blank">
+          <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram">
+        </a>
+      </div>
+
+      <p>Note: API keys used here are for testing purposes only.</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -86,7 +86,7 @@ router.post(
   authController.postRequestVerifyEmail
 );
 
-router.post("/verifyEmail", authController.postVerifyEmail);
+router.get("/verifyEmail", authController.getVerifyEmail);
 
 router.post("/logout", isAuth, authController.postLogout);
 

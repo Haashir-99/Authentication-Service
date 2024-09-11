@@ -65,7 +65,8 @@ exports.postSignup = async (req, res, next) => {
 };
 
 exports.postRequestVerifyEmail = async (req, res, next) => {
-  const email = req.body.email;
+  const { email } = req.body;
+  const frontendUrl = req.bodyfrontendUrl || null
 
   try {
     const user = await User.findOne({ email: email });
@@ -82,10 +83,10 @@ exports.postRequestVerifyEmail = async (req, res, next) => {
         email: email,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "6h" }
+      { expiresIn: "2h" }
     );
 
-    const verifyLink = `http://localhost:3000/api/auth/passwordReset?token=${emailVerificationToken}`;
+    const verifyLink = `http://localhost:3000/api/auth/verifyEmail?token=${emailVerificationToken}&frontendUrl=${encodeURIComponent(frontendUrl)}`;
 
     await axios.post("http://localhost:4000/api/mail/send-transactional", {
       recipient: {
@@ -102,18 +103,19 @@ exports.postRequestVerifyEmail = async (req, res, next) => {
     });
 
     res.status(200).json({
-      message: "Password reset email sent",
+      message: "Verification email sent",
     });
   } catch (err) {
     next(err);
   }
 };
 
-exports.postVerifyEmail = async (req, res, next) => {
-  const emailVerificationToken = req.query.token;
+exports.getVerifyEmail = async (req, res, next) => {
+  const { token, frontendUrl } = req.query;
+  let message, title;
 
   try {
-    if (!emailVerificationToken) {
+    if (!token) {
       const error = new Error("No token provided");
       error.statusCode = 401;
       throw error;
@@ -121,7 +123,7 @@ exports.postVerifyEmail = async (req, res, next) => {
 
     let decodedToken;
 
-    decodedToken = jwt.verify(emailVerificationToken, process.env.JWT_SECRET);
+    decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
     if (!decodedToken) {
       const error = new Error("Not Authenticated");
@@ -130,19 +132,58 @@ exports.postVerifyEmail = async (req, res, next) => {
     }
 
     const user = await User.findOne({ email: decodedToken.email });
-    if (!user) {
-      const error = new Error("No such user");
-      error.statusCode = 404;
-      throw error;
-    }
-    user.verified = true;
-    await user.save();
+    console.log(frontendUrl)
+    if (frontendUrl !== 'null') {
+      if (!user) {
+        return res.redirect(
+          `${decodeURIComponent(frontendUrl)}/email-not-found`
+        );
+      }
 
-    res.status(201).json({
-      message: "Verified User Successfully",
-    });
-  } catch (err) {
-    next(err);
+      if (user.verified) {
+        return res.redirect(
+          `${decodeURIComponent(frontendUrl)}/email-already-verified`
+        );
+      }
+
+      user.verified = true;
+      await user.save();
+
+      return res.redirect(`${decodeURIComponent(frontendUrl)}/email-verified`);
+    } else {
+      if (!user) {
+        message = "User Not Found";
+        const html = createHtmlResponse(title, message)
+        return res.status(404).send(html);
+      }
+
+      if (user.verified) {
+        title = "Verified!";
+        message = "Email already verified!";
+        const html = createHtmlResponse(title, message)
+        return res.send(html);
+      }
+
+      user.verified = true;
+      await user.save();
+
+      title = "Verified";
+      message = "Email successfully verified! You can close this page now.";
+      const html = createHtmlResponse(title, message)
+      return res.send(html);
+    }
+  } catch (error) {
+    if (frontendUrl) {
+      return res.redirect(
+        `${decodeURIComponent(frontendUrl)}/email-verification-failed`
+      );
+    } else {
+      title = "Error";
+      message = "Something went wrong! Please try again later.";
+      const html = createHtmlResponse(title, message)
+      res.status(500).send(html);
+    }
+    next(error)
   }
 };
 
@@ -192,7 +233,7 @@ exports.postLogin = async (req, res, next) => {
         userId: user._id.toString(),
       },
       process.env.JWT_SECRET,
-      { expiresIn: "8h" }
+      { expiresIn: "2h" }
     );
 
     const refreshToken = jwt.sign(
@@ -213,7 +254,7 @@ exports.postLogin = async (req, res, next) => {
       userId: user._id.toString(),
       token: token,
       refreshToken: refreshToken,
-      expiresIn: "8 hours",
+      expiresIn: "2 hours",
     });
   } catch (err) {
     next(err);
@@ -266,7 +307,7 @@ exports.postRefreshToken = async (req, res, next) => {
 };
 
 exports.postRequestPasswordReset = async (req, res, next) => {
-  const { email } = req.body;
+  const { email, frontendUrl } = req.body;
 
   const errors = validationResult(req);
 
@@ -278,6 +319,16 @@ exports.postRequestPasswordReset = async (req, res, next) => {
   }
 
   try {
+    if(!email) {
+      const error = new Error("Email not provided");
+      error.statusCode = 400;
+      throw error;
+    }
+    if(!frontendUrl){
+      const error = new Error("FrontendUrl not provided");
+      error.statusCode = 400;
+      throw error;
+    }
     const user = await User.findOne({ email: email });
     if (!user) {
       const error = new Error("No such user");
@@ -295,7 +346,7 @@ exports.postRequestPasswordReset = async (req, res, next) => {
       { expiresIn: "20m" }
     );
     // Construct password reset link (with token)
-    const resetLink = `http://localhost:3000/api/auth/passwordReset?token=${passwordResetToken}`;
+    const resetLink = `${frontendUrl}/passwordReset?token=${passwordResetToken}`;
 
     await axios.post(
       "http://localhost:4000/api/mail/send-transactional", // Call mail service to send the reset email
@@ -519,3 +570,52 @@ exports.postDeleteAccount = async (req, res, next) => {
     next(err);
   }
 };
+
+// Helper functions
+
+function createHtmlResponse(title, message) {
+  return `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title || "Error"}</title>
+    <style>
+      body {
+        background-color: #000;
+        color: #fff;
+        font-family: 'Arial', sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        text-align: center;
+      }
+      .container {
+        max-width: 600px;
+        padding: 20px;
+        border-radius: 8px;
+        background-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      }
+      h1 {
+        font-size: 2em;
+        margin-bottom: 15px;
+      }
+      p {
+        font-size: 1.2em;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>${title}</h1>
+      <p>${message}</p>
+    </div>
+  </body>
+  </html>
+  `;
+}
