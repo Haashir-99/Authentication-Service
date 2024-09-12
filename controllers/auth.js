@@ -66,7 +66,7 @@ exports.postSignup = async (req, res, next) => {
 
 exports.postRequestVerifyEmail = async (req, res, next) => {
   const { email } = req.body;
-  const frontendUrl = req.bodyfrontendUrl || null
+  const frontendUrl = req.bodyfrontendUrl || null;
 
   try {
     const user = await User.findOne({ email: email });
@@ -86,7 +86,9 @@ exports.postRequestVerifyEmail = async (req, res, next) => {
       { expiresIn: "2h" }
     );
 
-    const verifyLink = `http://localhost:3000/api/auth/verifyEmail?token=${emailVerificationToken}&frontendUrl=${encodeURIComponent(frontendUrl)}`;
+    const verifyLink = `http://localhost:3000/api/auth/verifyEmail?token=${emailVerificationToken}&frontendUrl=${encodeURIComponent(
+      frontendUrl
+    )}`;
 
     await axios.post("http://localhost:4000/api/mail/send-transactional", {
       recipient: {
@@ -111,7 +113,8 @@ exports.postRequestVerifyEmail = async (req, res, next) => {
 };
 
 exports.getVerifyEmail = async (req, res, next) => {
-  const { token, frontendUrl } = req.query;
+  const { token } = req.query;
+  let { frontendUrl } = req.query;
   let message, title;
 
   try {
@@ -132,8 +135,11 @@ exports.getVerifyEmail = async (req, res, next) => {
     }
 
     const user = await User.findOne({ email: decodedToken.email });
-    console.log(frontendUrl)
-    if (frontendUrl !== 'null') {
+    if (!frontendUrl) {
+      frontendUrl = "null";
+    }
+    console.log(frontendUrl);
+    if (frontendUrl !== "null") {
       if (!user) {
         return res.redirect(
           `${decodeURIComponent(frontendUrl)}/email-not-found`
@@ -153,14 +159,14 @@ exports.getVerifyEmail = async (req, res, next) => {
     } else {
       if (!user) {
         message = "User Not Found";
-        const html = createHtmlResponse(title, message)
+        const html = createHtmlResponse(title, message);
         return res.status(404).send(html);
       }
 
       if (user.verified) {
         title = "Verified!";
         message = "Email already verified!";
-        const html = createHtmlResponse(title, message)
+        const html = createHtmlResponse(title, message);
         return res.send(html);
       }
 
@@ -169,7 +175,7 @@ exports.getVerifyEmail = async (req, res, next) => {
 
       title = "Verified";
       message = "Email successfully verified! You can close this page now.";
-      const html = createHtmlResponse(title, message)
+      const html = createHtmlResponse(title, message);
       return res.send(html);
     }
   } catch (error) {
@@ -180,10 +186,10 @@ exports.getVerifyEmail = async (req, res, next) => {
     } else {
       title = "Error";
       message = "Something went wrong! Please try again later.";
-      const html = createHtmlResponse(title, message)
+      const html = createHtmlResponse(title, message);
       res.status(500).send(html);
     }
-    next(error)
+    next(error);
   }
 };
 
@@ -319,12 +325,12 @@ exports.postRequestPasswordReset = async (req, res, next) => {
   }
 
   try {
-    if(!email) {
+    if (!email) {
       const error = new Error("Email not provided");
       error.statusCode = 400;
       throw error;
     }
-    if(!frontendUrl){
+    if (!frontendUrl) {
       const error = new Error("FrontendUrl not provided");
       error.statusCode = 400;
       throw error;

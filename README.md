@@ -1,4 +1,3 @@
-
 </> -- [ Authentication API ] -- </>
 This API provides a set of authentication-related endpoints such as user registration, login, password reset, and more.
 
