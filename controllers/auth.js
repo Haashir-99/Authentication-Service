@@ -90,7 +90,7 @@ exports.postRequestVerifyEmail = async (req, res, next) => {
       frontendUrl
     )}`;
 
-    await axios.post("http://localhost:4000/api/mail/send-transactional", {
+    await axios.post("https://notification-service-amber.vercel.app/api/mail/send-transactional", {
       recipient: {
         email: email,
         name: name,
@@ -355,7 +355,7 @@ exports.postRequestPasswordReset = async (req, res, next) => {
     const resetLink = `${frontendUrl}/passwordReset?token=${passwordResetToken}`;
 
     await axios.post(
-      "http://localhost:4000/api/mail/send-transactional", // Call mail service to send the reset email
+      "https://notification-service-amber.vercel.app/api/mail/send-transactional", // Call mail service to send the reset email
       {
         recipient: {
           email: email,
