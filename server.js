@@ -30,6 +30,12 @@ app.use((req, res, next) => {
 
 app.use("/api/auth", authRoutes);
 
+app.all("*", (req, res, next) => {
+  const error = new Error(`Method ${req.method} not allowed on ${req.originalUrl}`);
+  error.statusCode = 405;
+  next(error);
+});
+
 app.use((error, req, res, next) => {
   console.log(error);
   const status = error.statusCode || 500;
