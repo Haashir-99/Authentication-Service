@@ -86,7 +86,7 @@ exports.postRequestVerifyEmail = async (req, res, next) => {
       { expiresIn: "2h" }
     );
 
-    const verifyLink = `https://authentication-service.vercel.app/verifyEmail?token=${emailVerificationToken}&frontendUrl=${encodeURIComponent(
+    const verifyLink = `https://authentication-service.vercel.app/api/auth/verifyEmail?token=${emailVerificationToken}&frontendUrl=${encodeURIComponent(
       frontendUrl
     )}`;
 
