@@ -60,7 +60,7 @@ router.put(
   "/passwordReset",
   [
     body("newPassword").trim().isLength({ min: 5 }),
-    body("confirmedNewPassword").trim().isLength({ min: 5 }),
+    body("confirmedPassword").trim().isLength({ min: 5 }),
   ],
   authController.putPasswordReset
 );
